@@ -2,6 +2,7 @@ package com.example.saudeconectada.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.saudeconectada.data.model.Recommendation
 import com.example.saudeconectada.data.model.Vital
 import com.example.saudeconectada.data.models.Patient
 import com.example.saudeconectada.data.repository.AuthRepository
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed class PatientDashboardUiState {
-    data class Success(val patient: Patient, val vitals: List<Vital>) : PatientDashboardUiState()
+        data class Success(val patient: Patient, val vitals: List<Vital>, val recommendations: List<Recommendation>) : PatientDashboardUiState()
     data class Error(val message: String) : PatientDashboardUiState()
     object Loading : PatientDashboardUiState()
     object Idle : PatientDashboardUiState()
@@ -39,7 +40,15 @@ class PatientDashboardViewModel(
                     val vitalsResult = vitalsRepository.getVitalsForPatient(patient.uid)
                     vitalsResult.fold(
                         onSuccess = { vitals ->
-                            _uiState.value = PatientDashboardUiState.Success(patient, vitals)
+                            val recommendationsResult = vitalsRepository.getRecommendationsForPatient(patient.uid)
+                            recommendationsResult.fold(
+                                onSuccess = { recommendations ->
+                                    _uiState.value = PatientDashboardUiState.Success(patient, vitals, recommendations)
+                                },
+                                onFailure = { exception ->
+                                    _uiState.value = PatientDashboardUiState.Error(exception.message ?: "Erro ao buscar recomendações")
+                                }
+                            )
                         },
                         onFailure = { exception ->
                             _uiState.value = PatientDashboardUiState.Error(exception.message ?: "Erro ao buscar sinais vitais")

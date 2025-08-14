@@ -6,17 +6,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import android.widget.Toast
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saudeconectada.ui.theme.SaudeConectadaTheme
 import com.example.saudeconectada.ui.viewmodels.PatientVitalsUiState
+import com.example.saudeconectada.ui.viewmodels.RecommendationUiEvent
 import com.example.saudeconectada.ui.viewmodels.PatientVitalsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,9 +29,32 @@ fun PatientVitalsScreen(
     viewModel: PatientVitalsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val recommendationState by viewModel.recommendationState.collectAsState()
+    val context = LocalContext.current
+
+    var recommendationText by remember { mutableStateOf("") }
+    var isSending by remember { mutableStateOf(false) }
 
     LaunchedEffect(patientId) {
         viewModel.loadVitals(patientId)
+    }
+
+    LaunchedEffect(recommendationState) {
+        when (val state = recommendationState) {
+            is RecommendationUiEvent.Loading -> isSending = true
+            is RecommendationUiEvent.Success -> {
+                isSending = false
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                recommendationText = ""
+                viewModel.resetRecommendationState()
+            }
+            is RecommendationUiEvent.Error -> {
+                isSending = false
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                viewModel.resetRecommendationState()
+            }
+            else -> isSending = false
+        }
     }
 
     SaudeConectadaTheme {
@@ -52,10 +75,13 @@ fun PatientVitalsScreen(
                 )
             }
         ) {
-            Surface(
-                modifier = Modifier.fillMaxSize().padding(it),
-                color = MaterialTheme.colorScheme.background
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+                    .padding(16.dp)
             ) {
+
                 when (val state = uiState) {
                     is PatientVitalsUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -64,15 +90,17 @@ fun PatientVitalsScreen(
                     }
                     is PatientVitalsUiState.Success -> {
                         val vitals = state.vitals
-                        if (vitals.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Nenhum dado vital registrado.", modifier = Modifier.padding(16.dp))
-                            }
-                        } else {
-                            LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
+                        LazyColumn(
+                            modifier = Modifier.weight(1.0f),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            if (vitals.isEmpty()) {
+                                item {
+                                    Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("Nenhum dado vital registrado.")
+                                    }
+                                }
+                            } else {
                                 items(vitals) { vital ->
                                     Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
                                         Column(modifier = Modifier.padding(16.dp)) {
@@ -88,6 +116,33 @@ fun PatientVitalsScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = recommendationText,
+                            onValueChange = { recommendationText = it },
+                            label = { Text("Adicionar Recomendação") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { 
+                                if (recommendationText.isNotBlank()) {
+                                    viewModel.sendRecommendation(patientId, recommendationText) 
+                                } else {
+                                    Toast.makeText(context, "A recomendação não pode estar vazia.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            enabled = !isSending,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isSending) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text("Enviar Recomendação")
                             }
                         }
                     }

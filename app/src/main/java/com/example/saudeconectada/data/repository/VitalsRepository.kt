@@ -1,5 +1,6 @@
 package com.example.saudeconectada.data.repository
 
+import com.example.saudeconectada.data.model.Recommendation
 import com.example.saudeconectada.data.model.Vital
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -10,6 +11,7 @@ class VitalsRepository {
 
     private val db = FirebaseFirestore.getInstance()
     private val vitalsCollection = db.collection("vitals")
+    private val recommendationsCollection = db.collection("recommendations")
     private val auth = FirebaseAuth.getInstance()
 
     suspend fun addVital(vital: Vital): Result<Unit> {
@@ -79,6 +81,30 @@ class VitalsRepository {
                 }
             }
             Result.success(allVitals)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun sendRecommendation(recommendation: Recommendation): Result<Unit> {
+        return try {
+            recommendationsCollection.add(recommendation).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getRecommendationsForPatient(patientId: String): Result<List<Recommendation>> {
+        return try {
+            val query = recommendationsCollection
+                .whereEqualTo("patientId", patientId)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+            val snapshot = query.get().await()
+            val recommendations = snapshot.documents.mapNotNull { document ->
+                document.toObject(Recommendation::class.java)?.copy(id = document.id)
+            }
+            Result.success(recommendations)
         } catch (e: Exception) {
             Result.failure(e)
         }

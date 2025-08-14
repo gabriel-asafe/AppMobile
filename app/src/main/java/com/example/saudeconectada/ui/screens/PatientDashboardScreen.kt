@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.saudeconectada.data.model.Recommendation
 import com.example.saudeconectada.data.model.Vital
 import com.example.saudeconectada.data.models.Patient
 import com.example.saudeconectada.navigation.Screen
@@ -79,13 +80,28 @@ fun PatientDashboardScreen(
                         PatientDashboard(
                             patient = state.patient,
                             vitals = state.vitals,
+                            recommendations = state.recommendations,
                             navController = navController,
                             viewModel = viewModel
                         )
                     }
                     is PatientDashboardUiState.Error -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        val clipboardManager = LocalClipboardManager.current
+                        val context = LocalContext.current
+
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(state.message, color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = {
+                                clipboardManager.setText(AnnotatedString(state.message))
+                                Toast.makeText(context, "Erro copiado!", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("Copiar Erro")
+                            }
                         }
                     }
                     is PatientDashboardUiState.Idle -> {}
@@ -99,6 +115,7 @@ fun PatientDashboardScreen(
 fun PatientDashboard(
     patient: Patient,
     vitals: List<Vital>,
+    recommendations: List<Recommendation>,
     navController: NavController,
     viewModel: PatientDashboardViewModel
 ) {
@@ -184,6 +201,47 @@ fun PatientDashboard(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Recomendações Médicas", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (recommendations.isEmpty()) {
+            item {
+                Text("Nenhuma recomendação recebida ainda.", modifier = Modifier.padding(vertical = 16.dp))
+            }
+        } else {
+            items(recommendations) { recommendation ->
+                RecommendationCard(recommendation = recommendation)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationCard(recommendation: Recommendation) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            val date = recommendation.timestamp.toDate()
+            val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            Text(
+                text = "Recebido em: ${format.format(date)}",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = recommendation.text,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
