@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "186831191990",
+    "project_id": "saudeconectada-3f274",
+    "storage_bucket": "saudeconectada-3f274.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186831191990:android:fa0d981943b2fad44a4b17",
+        "android_client_info": {
+          "package_name": "com.example.saudeconectada"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvjlIEN3eX015lWRWERemFFJL7IbPWWIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
