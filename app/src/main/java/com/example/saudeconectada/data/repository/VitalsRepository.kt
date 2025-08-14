@@ -8,15 +8,13 @@ import kotlinx.coroutines.tasks.await
 
 class VitalsRepository {
 
-    private val auth by lazy { FirebaseAuth.getInstance() }
-    private val db by lazy { FirebaseFirestore.getInstance() }
+    private val db = FirebaseFirestore.getInstance()
+    private val vitalsCollection = db.collection("vitals")
+    private val auth = FirebaseAuth.getInstance()
 
     suspend fun addVital(vital: Vital): Result<Unit> {
         return try {
-            val patientId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não logado."))
-            val newVital = vital.copy(patientId = patientId)
-
-            db.collection("vitals").add(newVital).await()
+            vitalsCollection.add(vital).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -25,14 +23,42 @@ class VitalsRepository {
 
     suspend fun getVitalsForPatient(patientId: String): Result<List<Vital>> {
         return try {
-            val snapshot = db.collection("vitals")
+            val query = vitalsCollection
                 .whereEqualTo("patientId", patientId)
                 .orderBy("date", Query.Direction.DESCENDING)
-                .get()
-                .await()
-
-            val vitals = snapshot.toObjects(Vital::class.java)
+            val snapshot = query.get().await()
+            val vitals = snapshot.documents.mapNotNull { document ->
+                document.toObject(Vital::class.java)?.copy(id = document.id)
+            }
             Result.success(vitals)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteVital(vitalId: String): Result<Unit> {
+        return try {
+            vitalsCollection.document(vitalId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getVitalById(vitalId: String): Result<Vital?> {
+        return try {
+            val document = vitalsCollection.document(vitalId).get().await()
+            val vital = document.toObject(Vital::class.java)?.copy(id = document.id)
+            Result.success(vital)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateVital(vital: Vital): Result<Unit> {
+        return try {
+            vitalsCollection.document(vital.id).set(vital).await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -27,7 +27,7 @@ fun PatientVitalsScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(patientId) {
-        viewModel.fetchVitals(patientId)
+        viewModel.loadVitals(patientId)
     }
 
     Column(

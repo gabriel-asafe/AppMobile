@@ -18,19 +18,46 @@ import com.example.saudeconectada.ui.viewmodels.LogVitalsViewModel
 fun LogVitalsScreen(
     navController: NavController,
     patientId: String,
+    vitalId: String?,
     viewModel: LogVitalsViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     var heartRate by remember { mutableStateOf("") }
     var bloodPressure by remember { mutableStateOf("") }
     var temperature by remember { mutableStateOf("") }
     var glucose by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
 
-    val uiState by viewModel.uiState.collectAsState()
+    // Effect to load the vital data when vitalId is present
+    LaunchedEffect(vitalId) {
+        if (vitalId != null) {
+            viewModel.loadVital(vitalId)
+        } else {
+            viewModel.resetState() // Clear previous data if creating a new vital
+        }
+    }
 
+    // Effect to populate fields and handle navigation
     LaunchedEffect(uiState) {
-        if (uiState is LogVitalsUiState.Success) {
-            navController.popBackStack()
+        val state = uiState
+        if (state is LogVitalsUiState.Success) {
+            if (state.vital != null) {
+                // Populate fields for editing
+                state.vital.let {
+                    heartRate = it.heartRate.toString()
+                    bloodPressure = it.bloodPressure
+                    temperature = it.temperature.toString()
+                    glucose = it.glucose.toString()
+                    weight = it.weight.toString()
+                }
+            }
+            if (state.isSaved) {
+                // Signal previous screen and navigate back
+                navController.previousBackStackEntry?.savedStateHandle?.set("vitals_updated", true)
+                navController.popBackStack()
+                viewModel.resetState() // Reset state after navigation
+            }
         }
     }
 
@@ -40,7 +67,7 @@ fun LogVitalsScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Registrar Sinais Vitais", style = MaterialTheme.typography.headlineMedium)
+        Text(if (vitalId == null) "Registrar Sinais Vitais" else "Editar Sinais Vitais", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(value = heartRate, onValueChange = { heartRate = it }, label = { Text("Frequência Cardíaca (bpm)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
@@ -61,6 +88,7 @@ fun LogVitalsScreen(
         Button(
             onClick = {
                 val vital = Vital(
+                    id = vitalId ?: "", // Pass the ID if we are editing
                     patientId = patientId,
                     heartRate = heartRate.toIntOrNull() ?: 0,
                     bloodPressure = bloodPressure,
@@ -68,7 +96,11 @@ fun LogVitalsScreen(
                     glucose = glucose.toIntOrNull() ?: 0,
                     weight = weight.toDoubleOrNull() ?: 0.0
                 )
-                viewModel.addVital(vital)
+                if (vitalId == null) {
+                    viewModel.addVital(vital)
+                } else {
+                    viewModel.updateVital(vital)
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState !is LogVitalsUiState.Loading

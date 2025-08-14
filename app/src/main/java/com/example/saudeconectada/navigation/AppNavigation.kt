@@ -22,8 +22,9 @@ sealed class Screen(val route: String) {
     object ProfileSelection : Screen("profile_selection_screen")
     object PatientDashboard : Screen("patient_dashboard_screen")
     object DoctorDashboard : Screen("doctor_dashboard_screen")
-    object LogVitals : Screen("log_vitals/{patientId}") {
-        fun createRoute(patientId: String) = "log_vitals/$patientId"
+    object LogVitals : Screen("log_vitals/{patientId}?vitalId={vitalId}") {
+        fun createRoute(patientId: String) = "log_vitals/$patientId?vitalId=null"
+        fun createEditRoute(patientId: String, vitalId: String) = "log_vitals/$patientId?vitalId=$vitalId"
     }
     object PatientVitals : Screen("patient_vitals/{patientId}") {
         fun createRoute(patientId: String) = "patient_vitals/$patientId"
@@ -59,11 +60,23 @@ fun AppNavigation(navController: NavHostController) {
 
         composable(
             route = Screen.LogVitals.route,
-            arguments = listOf(navArgument("patientId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("patientId") { type = NavType.StringType },
+                navArgument("vitalId") { 
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
         ) { backStackEntry ->
             val patientId = backStackEntry.arguments?.getString("patientId")
+            val vitalId = backStackEntry.arguments?.getString("vitalId")
+
             if (patientId != null) {
-                LogVitalsScreen(navController = navController, patientId = patientId)
+                LogVitalsScreen(
+                    navController = navController, 
+                    patientId = patientId, 
+                    vitalId = if (vitalId == "null") null else vitalId
+                )
             }
         }
 
