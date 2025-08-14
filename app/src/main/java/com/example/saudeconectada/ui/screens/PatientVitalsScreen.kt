@@ -3,6 +3,8 @@ package com.example.saudeconectada.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.saudeconectada.ui.theme.SaudeConectadaTheme
 import com.example.saudeconectada.ui.viewmodels.PatientVitalsUiState
 import com.example.saudeconectada.ui.viewmodels.PatientVitalsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientVitalsScreen(
     navController: NavController,
@@ -30,48 +34,68 @@ fun PatientVitalsScreen(
         viewModel.loadVitals(patientId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text("Histórico de Sinais Vitais", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (val state = uiState) {
-            is PatientVitalsUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+    SaudeConectadaTheme {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Histórico de Sinais Vitais") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
             }
-            is PatientVitalsUiState.Success -> {
-                val vitals = state.vitals
-                if (vitals.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Nenhum dado vital registrado para este paciente.")
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize().padding(it),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                when (val state = uiState) {
+                    is PatientVitalsUiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(vitals) { vital ->
-                            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(vital.date.toDate())
-                                    Text(formattedDate, style = MaterialTheme.typography.titleMedium)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Frequência Cardíaca: ${vital.heartRate} bpm")
-                                    Text("Pressão Arterial: ${vital.bloodPressure} mmHg")
-                                    Text("Temperatura: ${vital.temperature} °C")
-                                    Text("Glicose: ${vital.glucose} mg/dL")
-                                    Text("Peso: ${vital.weight} kg")
+                    is PatientVitalsUiState.Success -> {
+                        val vitals = state.vitals
+                        if (vitals.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Nenhum dado vital registrado.", modifier = Modifier.padding(16.dp))
+                            }
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(vitals) { vital ->
+                                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            val date = vital.date.toDate()
+                                            val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                                            Text(format.format(date), style = MaterialTheme.typography.titleMedium)
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text("Frequência Cardíaca: ${vital.heartRate} bpm")
+                                            Text("Pressão Arterial: ${vital.bloodPressure} mmHg")
+                                            Text("Temperatura: ${vital.temperature} °C")
+                                            Text("Glicose: ${vital.glucose} mg/dL")
+                                            Text("Peso: ${vital.weight} kg")
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
-            is PatientVitalsUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error)
+                    is PatientVitalsUiState.Error -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(state.message, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
             }
         }
