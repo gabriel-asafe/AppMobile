@@ -10,6 +10,8 @@ import com.example.saudeconectada.ui.screens.DoctorDashboardScreen
 import com.example.saudeconectada.ui.screens.LoginScreen
 import com.example.saudeconectada.ui.screens.PatientDashboardScreen
 import com.example.saudeconectada.ui.screens.ProfileSelectionScreen
+import com.example.saudeconectada.ui.screens.LogVitalsScreen
+import com.example.saudeconectada.ui.screens.PatientVitalsScreen
 import com.example.saudeconectada.ui.screens.SignUpScreen
 
 sealed class Screen(val route: String) {
@@ -20,6 +22,12 @@ sealed class Screen(val route: String) {
     object ProfileSelection : Screen("profile_selection_screen")
     object PatientDashboard : Screen("patient_dashboard_screen")
     object DoctorDashboard : Screen("doctor_dashboard_screen")
+    object LogVitals : Screen("log_vitals/{patientId}") {
+        fun createRoute(patientId: String) = "log_vitals/$patientId"
+    }
+    object PatientVitals : Screen("patient_vitals/{patientId}") {
+        fun createRoute(patientId: String) = "patient_vitals/$patientId"
+    }
 }
 
 @Composable
@@ -47,6 +55,24 @@ fun AppNavigation(navController: NavHostController) {
 
         composable(Screen.DoctorDashboard.route) {
             DoctorDashboardScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.LogVitals.route,
+            arguments = listOf(navArgument("patientId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId")
+            if (patientId != null) {
+                LogVitalsScreen(navController = navController, patientId = patientId)
+            }
+        }
+
+        composable(
+            route = Screen.PatientVitals.route,
+            arguments = listOf(navArgument("patientId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId") ?: ""
+            PatientVitalsScreen(navController = navController, patientId = patientId)
         }
     }
 }

@@ -17,7 +17,7 @@ class AuthRepository {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val uid = authResult.user?.uid ?: return Result.failure(Exception("Falha ao criar usuário, UID não encontrado."))
 
-            val userMap = hashMapOf(
+            val userMap: HashMap<String, Any> = hashMapOf(
                 "id" to uid,
                 "name" to name,
                 "email" to email,
@@ -34,11 +34,13 @@ class AuthRepository {
             }
 
             db.collection("users").document(uid).set(userMap).await()
-            
+            android.util.Log.d("AuthRepository", "Usuário criado no Firestore com UID: $uid")
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Falha ao escrever dados do usuário no Firestore", e)
             // Tenta deletar o usuário criado no Auth se a escrita no Firestore falhar
             auth.currentUser?.delete()?.await()
+            android.util.Log.d("AuthRepository", "Usuário deletado do Firebase Auth após falha na escrita do Firestore.")
             Result.failure(e)
         }
     }
@@ -97,6 +99,25 @@ class AuthRepository {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não logado."))
             val document = db.collection("users").document(uid).get().await()
+            if (document != null && document.exists()) {
+                val patient = Patient(
+                    uid = document.id,
+                    name = document.getString("name")!!,
+                    email = document.getString("email")!!,
+                    patientCode = document.getString("patientCode")!!
+                )
+                Result.success(patient)
+            } else {
+                Result.failure(Exception("Paciente não encontrado."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getPatientDetails(patientId: String): Result<Patient> {
+        return try {
+            val document = db.collection("users").document(patientId).get().await()
             if (document != null && document.exists()) {
                 val patient = Patient(
                     uid = document.id,

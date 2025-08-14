@@ -19,7 +19,7 @@ class PatientDashboardViewModel : ViewModel() {
 
     private val repository = AuthRepository()
 
-    private val _uiState = MutableStateFlow<PatientDashboardUiState>(PatientDashboardUiState.Idle)
+    private val _uiState = MutableStateFlow<PatientDashboardUiState>(PatientDashboardUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     init {

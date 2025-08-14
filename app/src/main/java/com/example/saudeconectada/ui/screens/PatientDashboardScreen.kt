@@ -22,13 +22,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Button
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saudeconectada.ui.viewmodels.PatientDashboardUiState
+import com.example.saudeconectada.navigation.Screen
 import com.example.saudeconectada.ui.viewmodels.PatientDashboardViewModel
 
 @Composable
@@ -52,6 +56,7 @@ fun PatientDashboardScreen(
             is PatientDashboardUiState.Success -> {
                 val patient = state.patient
                 val clipboardManager = LocalClipboardManager.current
+                val context = LocalContext.current
 
                 Text("Bem-vindo(a), ${patient.name}", style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -81,14 +86,25 @@ fun PatientDashboardScreen(
                             )
                             IconButton(onClick = {
                                 clipboardManager.setText(AnnotatedString(patient.patientCode))
+                                Toast.makeText(context, "Código copiado!", Toast.LENGTH_SHORT).show()
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.ContentCopy, 
-                                    contentDescription = "Copiar Código"
+                                    contentDescription = "Copiar Código",
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { navController.navigate(Screen.LogVitals.createRoute(patient.uid)) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Registrar Sinais Vitais")
                 }
             }
             is PatientDashboardUiState.Error -> {
