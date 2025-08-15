@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// Estado para representar os eventos da UI de autenticação
+
 sealed class AuthUiEvent {
     data class Success(val userType: String) : AuthUiEvent()
     data class Error(val message: String) : AuthUiEvent()
@@ -42,8 +42,7 @@ class AuthViewModel : ViewModel() {
             _authUiEvent.value = AuthUiEvent.Loading
             val result = repository.signUp(name, email, password, userType, crm, specialties)
             result.onSuccess {
-                // Após o cadastro, o usuário é logado automaticamente pelo Firebase Auth
-                // então podemos simplesmente direcioná-lo para a tela de login para entrar
+
                 _authUiEvent.value = AuthUiEvent.Success("login") // Sinaliza para ir para a tela de login
             }.onFailure {
                 _authUiEvent.value = AuthUiEvent.Error(it.message ?: "Ocorreu um erro desconhecido.")

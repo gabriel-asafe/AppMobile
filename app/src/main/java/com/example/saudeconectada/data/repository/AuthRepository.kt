@@ -29,7 +29,7 @@ class AuthRepository {
                 userMap["specialties"] = specialties ?: emptyList<String>()
                 userMap["linkedPatientIds"] = emptyList<String>()
             } else {
-                // Para pacientes, o código único pode ser o próprio UID ou um código gerado
+
                 userMap["patientCode"] = uid 
             }
 
@@ -38,7 +38,7 @@ class AuthRepository {
             Result.success(Unit)
         } catch (e: Exception) {
             android.util.Log.e("AuthRepository", "Falha ao escrever dados do usuário no Firestore", e)
-            // Tenta deletar o usuário criado no Auth se a escrita no Firestore falhar
+
             auth.currentUser?.delete()?.await()
             android.util.Log.d("AuthRepository", "Usuário deletado do Firebase Auth após falha na escrita do Firestore.")
             Result.failure(e)
@@ -70,10 +70,10 @@ class AuthRepository {
         return try {
             val doctorUid = auth.currentUser?.uid ?: throw Exception("Médico não está logado.")
 
-            // 1. Encontrar o paciente pelo código na coleção 'users'
+
             val patientQuery = db.collection("users")
                 .whereEqualTo("patientCode", patientCode)
-                .whereEqualTo("userType", "patient") // Garante que estamos buscando um paciente
+                .whereEqualTo("userType", "patient")
                 .limit(1)
                 .get()
                 .await()

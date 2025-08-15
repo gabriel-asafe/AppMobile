@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
+import com.example.saudeconectada.ui.theme.ThemeManager
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +61,12 @@ fun DoctorDashboardScreen(
                 TopAppBar(
                     title = { Text("Painel do Médico") },
                     actions = {
+                        IconButton(onClick = { ThemeManager.toggleTheme() }) {
+                            Icon(
+                                imageVector = if (ThemeManager.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Mudar tema"
+                            )
+                        }
                         IconButton(onClick = { /* TODO: Logout */ }) {
                             Icon(Icons.Default.ExitToApp, contentDescription = "Sair")
                         }

@@ -5,7 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
+import com.example.saudeconectada.ui.theme.ThemeManager
 import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -65,6 +68,14 @@ fun PatientVitalsScreen(
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { ThemeManager.toggleTheme() }) {
+                            Icon(
+                                imageVector = if (ThemeManager.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Mudar tema"
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

@@ -4,8 +4,11 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material3.*
+import com.example.saudeconectada.ui.theme.ThemeManager
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,11 +55,11 @@ fun LoginScreen(
     }
 
     SaudeConectadaTheme {
-        Scaffold {
-            Surface(
-                modifier = Modifier.fillMaxSize().padding(it),
-                color = MaterialTheme.colorScheme.background
-            ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -127,6 +130,16 @@ fun LoginScreen(
                     ) {
                         Text("Não tem uma conta? Cadastre-se")
                     }
+                }
+
+                IconButton(
+                    onClick = { ThemeManager.toggleTheme() },
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = if (ThemeManager.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                        contentDescription = "Mudar tema"
+                    )
                 }
             }
         }

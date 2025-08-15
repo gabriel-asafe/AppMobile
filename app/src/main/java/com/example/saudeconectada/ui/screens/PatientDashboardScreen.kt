@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,6 +28,7 @@ import com.example.saudeconectada.data.model.Recommendation
 import com.example.saudeconectada.data.model.Vital
 import com.example.saudeconectada.data.models.Patient
 import com.example.saudeconectada.navigation.Screen
+import com.example.saudeconectada.ui.theme.ThemeManager
 import com.example.saudeconectada.ui.theme.SaudeConectadaTheme
 import com.example.saudeconectada.ui.viewmodels.PatientDashboardUiState
 import com.example.saudeconectada.ui.viewmodels.PatientDashboardViewModel
@@ -54,6 +58,12 @@ fun PatientDashboardScreen(
                 TopAppBar(
                     title = { Text("Painel do Paciente") },
                     actions = {
+                        IconButton(onClick = { ThemeManager.toggleTheme() }) {
+                            Icon(
+                                imageVector = if (ThemeManager.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Mudar tema"
+                            )
+                        }
                         IconButton(onClick = { /* TODO: Logout */ }) {
                             Icon(Icons.Default.ExitToApp, contentDescription = "Sair")
                         }
